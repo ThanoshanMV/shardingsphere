@@ -28,19 +28,21 @@ import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.Assign
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.AssignmentValuesContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ColumnNameContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ColumnNamesContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.CrossOuterApplyClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.DeleteContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.DeleteWhereClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.DuplicateSpecificationContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ExprContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ForUpdateClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ForUpdateClauseListContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.FromClauseContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.FromClauseListContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.FromClauseOptionContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.GroupByClauseContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.InnerCrossJoinClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.InsertContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.InsertValuesClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.IntoClauseContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.JoinSpecificationContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.JoinedTableContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.JoinClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MergeAssignmentContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MergeAssignmentValueContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MergeContext;
@@ -49,22 +51,28 @@ import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MergeU
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MultipleTableNamesContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.MultipleTablesClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.OrderByItemContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.OuterJoinClauseContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ParenthesisJoinClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ParenthesisSelectSubqueryContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ProjectionContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.ProjectionsContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.QualifiedShorthandContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.QueryBlockContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.QueryNameContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.QueryTableExpressionClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectFromClauseContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectJoinContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectJoinOptionContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectJoinSpecificationContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectListContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectProjectionContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectProjectionExprClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectSubqueryContext;
+import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectTableReferenceContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SelectUnionClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SetAssignmentsClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SingleTableClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SubqueryContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.SubqueryFactoringClauseContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.TableFactorContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.TableNameContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.TableReferenceContext;
-import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.TableReferencesContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.UnionClauseContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.UpdateContext;
 import org.apache.shardingsphere.sql.parser.autogen.OracleStatementParser.UsingClauseContext;
@@ -286,15 +294,15 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
     @Override
     public ASTNode visitQueryBlock(final QueryBlockContext ctx) {
         OracleSelectStatement result = new OracleSelectStatement();
-        result.setProjections((ProjectionsSegment) visit(ctx.projections()));
+        result.setProjections((ProjectionsSegment) visit(ctx.selectList()));
         if (null != ctx.withClause()) {
             result.setWithSegment((WithSegment) visit(ctx.withClause()));
         }
         if (null != ctx.duplicateSpecification()) {
             result.getProjections().setDistinctRow(isDistinct(ctx));
         }
-        if (null != ctx.fromClause()) {
-            TableSegment tableSegment = (TableSegment) visit(ctx.fromClause());
+        if (null != ctx.selectFromClause()) {
+            TableSegment tableSegment = (TableSegment) visit(ctx.selectFromClause());
             result.setFrom(tableSegment);
         }
         if (null != ctx.whereClause()) {
@@ -362,12 +370,12 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
     }
     
     @Override
-    public ASTNode visitProjections(final ProjectionsContext ctx) {
+    public ASTNode visitSelectList(final SelectListContext ctx) {
         Collection<ProjectionSegment> projections = new LinkedList<>();
         if (null != ctx.unqualifiedShorthand()) {
             projections.add(new ShorthandProjectionSegment(ctx.unqualifiedShorthand().getStart().getStartIndex(), ctx.unqualifiedShorthand().getStop().getStopIndex()));
         }
-        for (ProjectionContext each : ctx.projection()) {
+        for (SelectProjectionContext each : ctx.selectProjection()) {
             projections.add((ProjectionSegment) visit(each));
         }
         ProjectionsSegment result = new ProjectionsSegment(ctx.getStart().getStartIndex(), ctx.getStop().getStopIndex());
@@ -376,23 +384,28 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
     }
     
     @Override
-    public ASTNode visitProjection(final ProjectionContext ctx) {
+    public ASTNode visitSelectProjection(final SelectProjectionContext ctx) {
         // FIXME :The stop index of project is the stop index of projection, instead of alias.
-        if (null != ctx.qualifiedShorthand()) {
-            QualifiedShorthandContext shorthand = ctx.qualifiedShorthand();
-            ShorthandProjectionSegment result = new ShorthandProjectionSegment(shorthand.getStart().getStartIndex(), shorthand.getStop().getStopIndex());
-            IdentifierValue identifier = new IdentifierValue(shorthand.identifier().getText());
-            result.setOwner(new OwnerSegment(shorthand.identifier().getStart().getStartIndex(), shorthand.identifier().getStop().getStopIndex(), identifier));
+        if (null != ctx.queryName()) {
+            QueryNameContext queryName = ctx.queryName();
+            ShorthandProjectionSegment result = new ShorthandProjectionSegment(queryName.getStart().getStartIndex(), ctx.DOT_ASTERISK_().getSymbol().getStopIndex());
+            IdentifierValue identifier = new IdentifierValue(queryName.getText());
+            result.setOwner(new OwnerSegment(queryName.getStart().getStartIndex(), queryName.getStop().getStopIndex(), identifier));
             return result;
         }
-        AliasSegment alias = null == ctx.alias() ? null : (AliasSegment) visit(ctx.alias());
-        if (null != ctx.columnName()) {
-            ColumnSegment column = (ColumnSegment) visit(ctx.columnName());
+        if (null != ctx.alias()) {
+            AliasContext aliasContext = ctx.alias();
+            ShorthandProjectionSegment result = new ShorthandProjectionSegment(aliasContext.getStart().getStartIndex(), ctx.DOT_ASTERISK_().getSymbol().getStopIndex());
+            IdentifierValue identifier = new IdentifierValue(aliasContext.getText());
+            result.setOwner(new OwnerSegment(aliasContext.getStart().getStartIndex(), aliasContext.getStop().getStopIndex(), identifier));
+            return result;
+        }
+        if (null != ctx.tableName()) {
+            ColumnSegment column = (ColumnSegment) visit(ctx.tableName());
             ColumnProjectionSegment result = new ColumnProjectionSegment(column);
-            result.setAlias(alias);
             return result;
         }
-        return createProjection(ctx, alias);
+        return createProjection(ctx.selectProjectionExprClause());
     }
     
     @Override
@@ -403,8 +416,9 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
         return new AliasSegment(ctx.start.getStartIndex(), ctx.stop.getStopIndex(), new IdentifierValue(ctx.STRING_().getText()));
     }
     
-    private ASTNode createProjection(final ProjectionContext ctx, final AliasSegment alias) {
+    private ASTNode createProjection(final SelectProjectionExprClauseContext ctx) {
         ASTNode projection = visit(ctx.expr());
+        AliasSegment alias = null == ctx.alias() ? null : (AliasSegment) visit(ctx.alias());
         if (projection instanceof AggregationProjectionSegment) {
             ((AggregationProjectionSegment) projection).setAlias(alias);
             return projection;
@@ -445,22 +459,22 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
     }
     
     @Override
-    public ASTNode visitFromClause(final FromClauseContext ctx) {
-        return visit(ctx.tableReferences());
+    public ASTNode visitSelectFromClause(final SelectFromClauseContext ctx) {
+        return visit(ctx.fromClauseList());
     }
     
     @Override
-    public ASTNode visitTableReferences(final TableReferencesContext ctx) {
-        TableSegment result = (TableSegment) visit(ctx.tableReference(0));
-        if (ctx.tableReference().size() > 1) {
-            for (int i = 1; i < ctx.tableReference().size(); i++) {
-                result = generateJoinTableSourceFromTableReference(ctx.tableReference(i), result);
+    public ASTNode visitFromClauseList(final FromClauseListContext ctx) {
+        TableSegment result = (TableSegment) visit(ctx.fromClauseOption(0));
+        if (ctx.fromClauseOption().size() > 1) {
+            for (int i = 1; i < ctx.fromClauseOption().size(); i++) {
+                result = generateJoinTableSourceFromFromClauseOption(ctx.fromClauseOption(i), result);
             }
         }
         return result;
     }
     
-    private JoinTableSegment generateJoinTableSourceFromTableReference(final TableReferenceContext ctx, final TableSegment tableSegment) {
+    private JoinTableSegment generateJoinTableSourceFromFromClauseOption(final FromClauseOptionContext ctx, final TableSegment tableSegment) {
         JoinTableSegment result = new JoinTableSegment();
         result.setStartIndex(tableSegment.getStartIndex());
         result.setStopIndex(ctx.stop.getStopIndex());
@@ -470,61 +484,115 @@ public final class OracleDMLStatementSQLVisitor extends OracleStatementSQLVisito
     }
     
     @Override
-    public ASTNode visitTableReference(final TableReferenceContext ctx) {
+    public ASTNode visitFromClauseOption(final FromClauseOptionContext ctx) {
+        if (null != ctx.joinClause()) {
+            return visit(ctx.joinClause());
+        }
+        if (null != ctx.selectTableReference()) {
+            return visit(ctx.selectTableReference());
+        }
+        return visit(ctx.parenthesisJoinClause());
+    }
+    
+    @Override
+    public ASTNode visitJoinClause(final JoinClauseContext ctx) {
         TableSegment result;
         TableSegment left;
-        left = (TableSegment) visit(ctx.tableFactor());
-        if (!ctx.joinedTable().isEmpty()) {
-            for (JoinedTableContext each : ctx.joinedTable()) {
-                left = visitJoinedTable(each, left);
-            }
+        left = (TableSegment) visit(ctx.selectTableReference());
+        for (SelectJoinContext each : ctx.selectJoin()) {
+            left = visitJoinedTable(each, left);
         }
         result = left;
         return result;
     }
     
     @Override
-    public ASTNode visitTableFactor(final TableFactorContext ctx) {
-        if (null != ctx.subquery()) {
-            OracleSelectStatement subquery = (OracleSelectStatement) visit(ctx.subquery());
-            SubquerySegment subquerySegment = new SubquerySegment(ctx.subquery().start.getStartIndex(), ctx.subquery().stop.getStopIndex(), subquery);
-            SubqueryTableSegment result = new SubqueryTableSegment(subquerySegment);
-            if (null != ctx.alias()) {
-                result.setAlias((AliasSegment) visit(ctx.alias()));
-            }
-            return result;
-        }
-        if (null != ctx.tableName()) {
-            SimpleTableSegment result = (SimpleTableSegment) visit(ctx.tableName());
-            if (null != ctx.alias()) {
-                result.setAlias((AliasSegment) visit(ctx.alias()));
-            }
-            return result;
-        }
-        return visit(ctx.tableReferences());
+    public ASTNode visitParenthesisJoinClause(final ParenthesisJoinClauseContext ctx) {
+        return visit(ctx.joinClause());
     }
     
-    private JoinTableSegment visitJoinedTable(final JoinedTableContext ctx, final TableSegment tableSegment) {
-        JoinTableSegment result = new JoinTableSegment();
-        result.setLeft(tableSegment);
-        result.setStartIndex(tableSegment.getStartIndex());
-        result.setStopIndex(ctx.stop.getStopIndex());
-        TableSegment right = (TableSegment) visit(ctx.tableFactor());
-        result.setRight(right);
-        if (null != ctx.joinSpecification()) {
-            result = visitJoinSpecification(ctx.joinSpecification(), result);
+    @Override
+    public ASTNode visitSelectTableReference(final SelectTableReferenceContext ctx) {
+        TableSegment result = (TableSegment) visit(ctx.queryTableExpressionClause());
+        if (null != ctx.alias()) {
+            result.setAlias((AliasSegment) visit(ctx.alias()));
         }
         return result;
     }
     
-    private JoinTableSegment visitJoinSpecification(final JoinSpecificationContext ctx, final JoinTableSegment joinTableSource) {
-        if (null != ctx.expr()) {
-            ExpressionSegment condition = (ExpressionSegment) visit(ctx.expr());
+    @Override
+    public ASTNode visitQueryTableExpressionClause(final QueryTableExpressionClauseContext ctx) {
+        if (null != ctx.queryTableExpression().queryTableExpressionSampleClause()) {
+            if (null != ctx.queryTableExpression().queryTableExpressionSampleClause().queryTableExpressionTableClause()) {
+                SimpleTableSegment result = 
+                        (SimpleTableSegment) visit(ctx.queryTableExpression().queryTableExpressionSampleClause().queryTableExpressionTableClause().tableName());
+                return result;
+            }
+        }
+        OracleSelectStatement subquery = (OracleSelectStatement) visit(ctx.queryTableExpression().lateralClause().selectSubquery());
+        SubquerySegment subquerySegment = new SubquerySegment(ctx.queryTableExpression().lateralClause().selectSubquery().start.getStartIndex(), 
+                ctx.queryTableExpression().lateralClause().selectSubquery().stop.getStopIndex(), subquery);
+        SubqueryTableSegment result = new SubqueryTableSegment(subquerySegment);
+        return result;
+    }
+    
+    private JoinTableSegment visitJoinedTable(final SelectJoinContext ctx, final TableSegment tableSegment) {
+        JoinTableSegment result = new JoinTableSegment();
+        result.setLeft(tableSegment);
+        result.setStartIndex(tableSegment.getStartIndex());
+        result.setStopIndex(ctx.stop.getStopIndex());
+        TableSegment right = (TableSegment) visit(ctx.selectJoinOption().innerCrossJoinClause().innerJoinClause().selectTableReference());
+        if (null != ctx.selectJoinOption().innerCrossJoinClause().innerJoinClause()) {
+            result = visitJoinSpecification(ctx.selectJoinOption().innerCrossJoinClause().innerJoinClause().selectJoinSpecification(), result);
+        }
+        result.setRight(right);
+        return result;
+    }
+    
+    @Override
+    public ASTNode visitSelectJoinOption(final SelectJoinOptionContext ctx) {
+        if (null != ctx.innerCrossJoinClause()) {
+            return visit(ctx.innerCrossJoinClause());
+        }
+        if (null != ctx.outerJoinClause()) {
+            return visit(ctx.outerJoinClause());
+        }
+        return visit(ctx.crossOuterApplyClause());
+    }
+    
+    @Override
+    public ASTNode visitInnerCrossJoinClause(final InnerCrossJoinClauseContext ctx) {
+        if (null != ctx.innerJoinClause()) {
+            JoinTableSegment result = (JoinTableSegment) visit(ctx.innerJoinClause().selectTableReference());
+            return visitJoinSpecification(ctx.innerJoinClause().selectJoinSpecification(), result);
+        }
+        JoinTableSegment result = (JoinTableSegment) visit(ctx.crossJoinClause().selectTableReference());
+        return result;
+    }
+    
+    @Override
+    public ASTNode visitOuterJoinClause(final OuterJoinClauseContext ctx) { 
+        JoinTableSegment result = (JoinTableSegment) visit(ctx.selectTableReference());
+        if (null != ctx.selectJoinSpecification()) {
+            return visitJoinSpecification(ctx.selectJoinSpecification(), result);
+        }
+        return result;
+    }
+    
+    @Override
+    public ASTNode visitCrossOuterApplyClause(final CrossOuterApplyClauseContext ctx) {
+        JoinTableSegment result = (JoinTableSegment) visit(ctx.selectTableReference());
+        return result;
+    }
+    
+    private JoinTableSegment visitJoinSpecification(final SelectJoinSpecificationContext ctx, final JoinTableSegment joinTableSource) {
+        if (null != ctx.condition()) {
+            ExpressionSegment condition = (ExpressionSegment) visit(ctx.condition().expr());
             joinTableSource.setCondition(condition);
         }
         if (null != ctx.USING()) {
             List<ColumnSegment> columnSegmentList = new LinkedList<>();
-            for (ColumnNameContext cname : ctx.columnNames().columnName()) {
+            for (ColumnNameContext cname : ctx.columnName()) {
                 columnSegmentList.add((ColumnSegment) visit(cname));
             }
             joinTableSource.setUsing(columnSegmentList);

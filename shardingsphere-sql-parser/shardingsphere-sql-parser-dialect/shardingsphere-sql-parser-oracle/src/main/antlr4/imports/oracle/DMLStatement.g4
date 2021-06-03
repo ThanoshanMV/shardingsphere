@@ -17,7 +17,7 @@
 
 grammar DMLStatement;
 
-import Symbol, Keyword, OracleKeyword, Literals, BaseRule, Comments;
+import Symbol, Keyword, OracleKeyword, Literals, BaseRule, Comments, DDLStatement;
 
 insert
     : INSERT (insertSingleTable | insertMultiTable)
@@ -121,7 +121,7 @@ unionClause
     ;
 
 queryBlock
-    : withClause? SELECT duplicateSpecification? projections fromClause? whereClause? groupByClause? havingClause?
+    : withClause? SELECT hint? duplicateSpecification? selectList selectFromClause? whereClause? groupByClause? havingClause?
     ;
 
 withClause
@@ -341,7 +341,7 @@ hierFunctionName
     ;
 
 duplicateSpecification
-    : ALL | DISTINCT
+    : (DISTINCT | UNIQUE) | ALL
     ;
 
 projections
@@ -362,6 +362,18 @@ unqualifiedShorthand
 
 qualifiedShorthand
     : identifier DOT_ASTERISK_
+    ;
+
+selectList
+    : unqualifiedShorthand | selectProjection (COMMA_ selectProjection)*
+    ;
+
+selectProjection
+    : ((queryName | (tableName | viewName | materializedViewName) | alias) DOT_ASTERISK_) | selectProjectionExprClause
+    ;
+
+selectProjectionExprClause
+    : expr (AS? alias)?
     ;
 
 fromClause
@@ -387,6 +399,175 @@ joinedTable
 
 joinSpecification
     : ON expr | USING columnNames
+    ;
+
+selectFromClause
+    : FROM fromClauseList
+    ;
+
+fromClauseList
+    : fromClauseOption (COMMA_ fromClauseOption)*
+    ;
+
+fromClauseOption
+    : joinClause | selectTableReference | parenthesisJoinClause | inlineAnalyticView
+    ;
+
+selectTableReference
+    : (queryTableExpressionClause | containersClause | shardsClause) (AS? alias)?
+    ;
+
+queryTableExpressionClause
+    : (ONLY LP_ queryTableExpression RP_ | queryTableExpression) flashbackQueryClause? (pivotClause | unpivotClause)?
+    ;
+
+flashbackQueryClause
+    : (VERSIONS (BETWEEN (SCN | TIMESTAMP) | PERIOD FOR validTimeColumn BETWEEN) (expr | MINVALUE) AND (expr | MAXVALUE)) 
+    | AS OF ((SCN | TIMESTAMP) expr | PERIOD FOR validTimeColumn expr)
+    ;
+
+queryTableExpression
+    : queryTableExpressionSampleClause | lateralClause | tableCollectionExpression | queryName
+    ;
+
+queryTableExpressionSampleClause
+    : (queryTableExpressionTableClause | queryTableExpressionViewClause | hierarchyName | queryTableExpressionAnalyticClause | (owner DOT_)? inlineExternalTable) sampleClause?
+    ;
+
+queryTableExpressionTableClause
+    : tableName (mofifiedExternalTable | partitionExtensionClause | AT_ dbLink)?
+    ;
+
+queryTableExpressionViewClause
+    : (viewName | materializedViewName) (AT_ dbLink)?
+    ;
+
+queryTableExpressionAnalyticClause
+    : analyticViewName (HIERARCHIES LP_ (((attrDim DOT_)? hierarchyName) (COMMA_ ((attrDim DOT_)? hierarchyName))*)? RP_)?
+    ;
+
+lateralClause
+    : LATERAL? LP_ selectSubquery subqueryRestrictionClause? RP_
+    ;
+
+inlineExternalTable
+    : EXTERNAL LP_ LP_ columnDefinition (COMMA_ columnDefinition)* RP_ inlineExternalTableProperties RP_
+    ;
+
+inlineExternalTableProperties
+    : (TYPE accessDriverType)? externalTableDataProps (REJECT LIMIT (INTEGER_ | UNLIMITED))?
+    ;
+
+mofifiedExternalTable
+    : EXTERNAL MODIFY modifyExternalTableProperties
+    ;
+
+modifyExternalTableProperties
+    : (DEFAULT DIRECTORY directoryName)? (LOCATION LP_ ((directoryName COLON_)? SQ_ locationSpecifier SQ_) (COMMA_ ((directoryName COLON_)? SQ_ locationSpecifier SQ_))* RP_)? 
+    (ACCESS PARAMETERS (BADFILE fileName | LOGFILE fileName | DISCARDFILE fileName))? (REJECT LIMIT (INTEGER_ | UNLIMITED))?
+    ;
+
+pivotClause
+    : PIVOT XML? LP_ (aggregationFunction LP_ expr RP_ (AS? alias)?) (COMMA_ (aggregationFunction LP_ expr RP_ (AS? alias)?))* pivotForClause pivotInClause RP_
+    ;
+
+pivotForClause
+    : FOR (columnName | LP_ columnName (COMMA_ columnName)* RP_)
+    ;
+
+pivotInClause
+    : IN LP_ ((((expr | LP_ expr (COMMA_ expr)* RP_) (AS? alias)?) (COMMA_ ((expr | LP_ expr (COMMA_ expr)* RP_) (AS? alias)?))*) | 
+    selectSubquery | ANY (COMMA_ ANY)*) RP_
+    ;
+
+unpivotClause
+    : UNPIVOT ((INCLUDE | EXCLUDE) NULLS)? LP_ (columnName | LP_ columnName (COMMA_ columnName)* RP_) pivotForClause unpivotInClause RP_
+    ;
+
+unpivotInClause
+    : IN LP_ ((columnName | LP_ columnName (COMMA_ columnName)* RP_) (AS (literals | LP_ literals (COMMA_ literals)* RP_))?) 
+    (COMMA_ ((columnName | LP_ columnName (COMMA_ columnName)* RP_) (AS (literals | LP_ literals (COMMA_ literals)* RP_))?))* RP_
+    ;
+
+sampleClause
+    : SAMPLE BLOCK? LP_ samplePercent RP_ (SEED LP_ seedValue RP_)?
+    ;
+
+partitionExtensionClause
+    : (PARTITION (LP_ partitionName RP_ | FOR LP_ partitionKeyValue (COMMA_ partitionKeyValue)* RP_)) 
+    | (SUBPARTITION (LP_ subpartitionName RP_ | FOR LP_ subpartitionKeyValue (COMMA_ subpartitionKeyValue)* RP_))
+    ;
+
+subqueryRestrictionClause
+    : WITH (READ ONLY | CHECK OPTION) (CONSTRAINT constraintName)?
+    ;
+
+tableCollectionExpression
+    : TABLE LP_ collectionExpression RP_ (LP_ PLUS_ RP_)?
+    ;
+
+containersClause
+    : CONTAINERS LP_ (tableName | viewName) RP_
+    ;
+
+shardsClause
+    : SHARDS LP_ (tableName | viewName) RP_
+    ;
+
+joinClause
+    : selectTableReference selectJoin+
+    ;
+
+selectJoin
+    : selectJoinOption
+    ;
+
+selectJoinOption
+    : innerCrossJoinClause | outerJoinClause | crossOuterApplyClause
+    ;
+
+innerCrossJoinClause
+    : innerJoinClause | crossJoinClause
+    ;
+
+innerJoinClause
+    : INNER? JOIN selectTableReference selectJoinSpecification
+    ;
+
+crossJoinClause
+    : (CROSS | NATURAL INNER?) JOIN selectTableReference
+    ;
+
+outerJoinClause
+    : queryPartitionClause? NATURAL? outerJoinType JOIN selectTableReference queryPartitionClause? selectJoinSpecification?
+    ;
+
+selectJoinSpecification
+    : ON condition | USING LP_ columnName (COMMA_ columnName)* RP_
+    ;
+
+queryPartitionClause
+    : PARTITION BY ((expr (COMMA_ expr)*) | LP_ expr (COMMA_ expr)* RP_)
+    ;
+
+outerJoinType
+    : (FULL | LEFT | RIGHT) OUTER?
+    ;
+
+crossOuterApplyClause
+    : (CROSS | OUTER) APPLY (selectTableReference | collectionExpression)
+    ;
+
+parenthesisJoinClause
+    : LP_ joinClause RP_
+    ;
+
+inlineAnalyticView
+    : ANALYTIC VIEW LP_ subavClause RP_ (AS? alias)?
+    ;
+
+collectionExpression
+    : selectSubquery | columnName | functionCall | expr
     ;
 
 whereClause

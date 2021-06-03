@@ -111,6 +111,10 @@ viewName
     : (owner DOT_)? name
     ;
 
+materializedViewName
+    : (owner DOT_)? name
+    ;
+
 columnName
     : (owner DOT_)? name
     ;
@@ -248,6 +252,10 @@ partitionSetName
     ;
 
 partitionKeyValue
+    : NUMBER_ | dateTimeLiterals
+    ;
+
+subpartitionKeyValue
     : NUMBER_ | dateTimeLiterals
     ;
 
@@ -721,4 +729,36 @@ unitName
 
 procedureName
     : identifier
+    ;
+
+validTimeColumn
+    : columnName
+    ;
+
+attrDim
+    : identifier
+    ;
+
+hierarchyName
+    : (owner DOT_)? name
+    ;
+
+analyticViewName
+    : (owner DOT_)? name
+    ;
+
+samplePercent
+    : numberLiterals
+    ;
+
+seedValue
+    : numberLiterals
+    ;
+
+constraintName
+    : identifier
+    ;
+
+condition
+    : expr
     ;
