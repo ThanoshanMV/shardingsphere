@@ -128,6 +128,10 @@ clusterName
     ;
 
 indexName
+    : (owner DOT_)? name
+    ;
+
+constraintName
     : identifier
     ;
 
@@ -300,7 +304,7 @@ columnCollationName
     ;
 
 alias
-    : IDENTIFIER_
+    : identifier | STRING_
     ;
 
 dataTypeLength
@@ -350,6 +354,7 @@ comparisonOperator
 predicate
     : bitExpr NOT? IN subquery
     | bitExpr NOT? IN LP_ expr (COMMA_ expr)* RP_
+    | bitExpr NOT? IN LP_ expr (COMMA_ expr)* RP_ AND predicate
     | bitExpr NOT? BETWEEN bitExpr AND predicate
     | bitExpr NOT? LIKE simpleExpr (ESCAPE simpleExpr)?
     | bitExpr
@@ -753,10 +758,6 @@ samplePercent
 
 seedValue
     : numberLiterals
-    ;
-
-constraintName
-    : identifier
     ;
 
 condition

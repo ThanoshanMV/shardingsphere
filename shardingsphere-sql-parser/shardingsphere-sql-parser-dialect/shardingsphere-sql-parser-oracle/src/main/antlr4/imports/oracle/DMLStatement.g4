@@ -209,7 +209,7 @@ filterClauses
     ;
 
 filterClause
-    : (MEASURES | (alias DOT_)? alias) TO expr
+    : (MEASURES | (alias DOT_)? alias) TO predicate
     ;
 
 addCalcsClause
@@ -350,10 +350,6 @@ projections
 
 projection
     : (columnName | expr) (AS? alias)? | qualifiedShorthand
-    ;
-
-alias
-    : identifier | STRING_
     ;
 
 unqualifiedShorthand

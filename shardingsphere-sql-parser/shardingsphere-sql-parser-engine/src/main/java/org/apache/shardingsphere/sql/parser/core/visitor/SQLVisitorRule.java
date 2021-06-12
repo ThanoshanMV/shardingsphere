@@ -108,6 +108,8 @@ public enum SQLVisitorRule {
     
     DROP_VIEW("DropView", SQLStatementType.DDL),
 
+    ANALYZE("Analyze", SQLStatementType.DDL),
+
     CREATE_SEQUENCE("CreateSequence", SQLStatementType.DDL),
 
     ALTER_SEQUENCE("AlterSequence", SQLStatementType.DDL),
@@ -121,6 +123,14 @@ public enum SQLVisitorRule {
     EXECUTE_STMT("ExecuteStmt", SQLStatementType.DDL),
     
     DEALLOCATE("Deallocate", SQLStatementType.DDL),
+    
+    CREATE_TABLESPACE("CreateTablespace", SQLStatementType.DDL),
+    
+    ALTER_TABLESPACE("AlterTablespace", SQLStatementType.DDL),
+    
+    DROP_TABLESPACE("DropTablespace", SQLStatementType.DDL),
+
+    SET_CONSTRAINTS("SetConstraints", SQLStatementType.TCL),
     
     SET_TRANSACTION("SetTransaction", SQLStatementType.TCL),
     
@@ -222,7 +232,7 @@ public enum SQLVisitorRule {
     
     CREATE_LOADABLE_FUNCTION("CreateLoadableFunction", SQLStatementType.DAL),
     
-    ANALYZE("AnalyzeTable", SQLStatementType.DAL),
+    ANALYZE_TABLE("AnalyzeTable", SQLStatementType.DAL),
     
     LOAD("Load", SQLStatementType.DAL),
     

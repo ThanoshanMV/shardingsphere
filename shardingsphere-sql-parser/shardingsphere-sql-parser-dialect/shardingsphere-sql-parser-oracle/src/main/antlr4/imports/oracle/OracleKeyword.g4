@@ -1423,8 +1423,24 @@ NONEDITIONABLE
     : N O N E D I T I O N A B L E
     ;
 
+DEPENDENT
+    : D E P E N D E N T
+    ;
+
 INDEXES
     : I N D E X E S
+    ;
+
+SHRINK
+    : S H R I N K
+    ;
+
+SPACE
+    : S P A C E
+    ;
+
+COMPACT
+    : C O M P A C T
     ;
 
 SUPPLEMENTAL
@@ -2161,6 +2177,30 @@ HIER_MEMBER_NAME
 
 HIER_MEMBER_UNIQUE_NAME
     : H I E R UL_ M E M B E R UL_ U N I Q U E UL_ N A M E
+    ;
+
+CHAINED
+    : C H A I N E D
+    ;
+
+STATISTICS
+    : S T A T I S T I C S
+    ;
+
+DANGLING
+    : D A N G L I N G
+    ;
+
+STRUCTURE
+    : S T R U C T U R E
+    ;
+
+FAST
+    : F A S T
+    ;
+
+COMPLETE
+    : C O M P L E T E
     ;
 
 VERSIONS
